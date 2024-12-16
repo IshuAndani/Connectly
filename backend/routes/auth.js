@@ -2,7 +2,7 @@
 const express = require('express');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
-const { generateToken } = require('../utils/auth');
+const { generateToken , authenticateToken} = require('../utils/auth');
 
 const router = express.Router();
 
@@ -28,6 +28,8 @@ router.post('/register', async (req, res) => {
         token: generateToken(user.id),
       });
     }
+    console.log("new user registered");
+    console.log(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -43,8 +45,27 @@ router.post('/login', async (req, res) => {
     res.json({
       token: generateToken(user.id),
     });
+    console.log("Login successful");
+    console.log(user);
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
+  }
+});
+
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id; // ID extracted from the token by the middleware
+    const user = await User.findById(userId); // Query the database for the user
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Return the user's name and any other details
+    res.json({ name: user.name });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

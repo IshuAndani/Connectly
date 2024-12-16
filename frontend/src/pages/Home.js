@@ -1,11 +1,35 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import {React, useEffect, useState} from 'react';
 
 const Home = () => {
   const navigate = useNavigate();
 
   // Check if the user is logged in by looking for the token in localStorage
   const isLoggedIn = !!localStorage.getItem('token');
+
+  const [name, setName] = useState(null); // State to hold the user's name
+
+  // Fetch user details after login
+  useEffect(() => {
+    if (isLoggedIn) {
+      const token = localStorage.getItem('token');
+
+      // Replace the URL with your API endpoint for fetching user data
+      fetch('http://localhost:5000/api/users', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`, // Pass the token for authentication
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data && data.name) {
+            setName(data.name); // Set the user's name
+          }
+        })
+        .catch((error) => console.error('Error fetching user data:', error));
+    }
+  }, [isLoggedIn]);
 
   // Logout Function
   const handleLogout = () => {
@@ -22,7 +46,7 @@ const Home = () => {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h1 style={styles.title}>Welcome to Connectly</h1>
+        <h1 style={styles.title}>Welcome to Connectly{isLoggedIn && name ? `, ${name}` : ''}!</h1>
         <p style={styles.subtitle}>Your one-stop platform for seamless communication and collaboration.</p>
       </header>
 
